@@ -13,3 +13,5 @@ appsettings.Local.json
 *.pfx
 *.p12
 .env
+# Original user-supplied engineering examples stay local; reviewed findings live in docs/.
+/Referrings/

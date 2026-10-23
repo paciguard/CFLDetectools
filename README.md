@@ -8,14 +8,19 @@ SMART**. See the [S7-200 SMART integration plan](plc/S7-200-SMART.md).
 
 ## Current implementation
 
-- WPF pump table with running/stopped/faulted state, ready, fault and remote signals.
-- One-second refresh and Start/Stop actions for two simulated pumps.
-- Shared pump models and an `IPumpClient` interface for a future Siemens driver.
-- In-memory simulator with command validation and executable behavior checks.
+- WPF test station with simulated pump control and a transmitter/instrument table.
+- Separate PLC analog, direct-instrument and waveform-DAQ sample quality.
+- Offline, stale, device-fault and out-of-range signal handling.
+- Total head, hydraulic/shaft power, pump efficiency and electrical-input efficiency.
+- Bearing temperatures, configurable advisory limits, velocity waveform metrics and FFT.
+- Captured Q–H/efficiency test points, plots and CSV session export.
+- Shared acquisition contracts, an in-memory simulator and executable behavior checks.
 
 **The current application runs only in simulation mode.** No Siemens communication
-driver is installed, and no command reaches equipment. Real PLC signals, alarms,
-history, user permissions and deployment remain future work.
+driver is installed, and no command reaches equipment. Live transmitter diagnostics,
+device protocols, persistent history, equipment alarms, user permissions and
+deployment remain future work. See [measurement methods and limits](docs/measurement-methods.md)
+and the [reference review](docs/reference-review.md).
 
 ## Run locally
 
@@ -27,8 +32,12 @@ dotnet build CFLDetectools.sln
 dotnet run --project src/CFLDetectools.Desktop
 ```
 
-Select P-101 or P-102 and use Start/Stop to change its simulated running feedback.
-No PLC connection settings are needed for this demo.
+Select P-101 or P-102 and use **Start demo**. Inspect the live measurements and
+bearing plots, then try the fault scenarios. Change the simulated flow setting and
+capture several points in **Test points and curves**, then export CSV. Configure
+fluid/geometry and optional advisory warnings in **Rig and warning settings**.
+Settings and captured points are session-only; export before closing. No PLC
+connection settings or Siemens software are needed for this demo.
 
 ## Develop on another Windows laptop
 
@@ -70,6 +79,7 @@ dotnet run --project tests/CFLDetectools.Checks
 | `tests/CFLDetectools.Checks` | Simulator command and lifecycle checks |
 | `config` | Example signal inventory; not loaded by the simulator |
 | `plc` | Siemens PLC integration requirements and future source exports |
+| `docs` | Analysis methods, limitations and reference-review findings |
 
 ## Next integration inputs
 
@@ -77,6 +87,8 @@ dotnet run --project tests/CFLDetectools.Checks
 2. Available communication protocol and connection parameters.
 3. Pump count, signal list, addresses and data types.
 4. Start/Stop request handshake, interlocks and feedback timing.
+5. Direct instrument/DAQ models, protocols, calibration and sample rates; see
+   `config/instruments.example.csv` for the inventory template (not loaded by the demo).
 
 Implement a separate `IPumpClient` driver after those details are confirmed.
 The simulator changes feedback immediately; a live driver must read real feedback

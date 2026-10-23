@@ -1,0 +1,11 @@
+channel_id,measurement,route,unit,address_or_register,data_type,byte_order,scaling_or_calibration
+Flow,Flow,PLC analog,m3/h,,,,
+Suction,Suction gauge pressure,PLC analog,kPa(g),,,,
+Discharge,Discharge gauge pressure,PLC analog,kPa(g),,,,
+TemperatureDE,Drive-end bearing temperature,PLC analog,degC,,,,
+TemperatureNDE,Non-drive-end bearing temperature,PLC analog,degC,,,,
+Speed,Shaft speed,Direct instrument,rpm,,,,
+Torque,Shaft torque,Direct instrument,Nm,,,,
+ElectricalPower,Electrical input power,Direct instrument,kW,,,,
+VibrationDE,Drive-end velocity RMS,Waveform DAQ,mm/s,,,,
+VibrationNDE,Non-drive-end velocity RMS,Waveform DAQ,mm/s,,,,

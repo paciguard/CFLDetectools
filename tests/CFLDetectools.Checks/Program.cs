@@ -57,4 +57,5 @@ try
     throw new Exception("Disposed client should fail.");
 }
 catch (ObjectDisposedException) { Check(true, "Disposed client cannot reconnect"); }
+await AnalysisChecks.RunAsync(Check);
 Console.WriteLine($"{checks} checks passed.");

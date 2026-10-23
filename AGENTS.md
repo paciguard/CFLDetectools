@@ -28,6 +28,13 @@ The user plans to develop and debug hardware on another Windows laptop later.
 Keep project paths relative and document setup from a clean Git clone. Do not
 assume this machine's Siemens installation or network settings exist there.
 
+The test bench uses a mixture of PLC inputs and direct instruments. Keep sample
+quality/timestamps and units explicit. Numerical methods and limits are described
+in `docs/measurement-methods.md`; reference-review findings are in
+`docs/reference-review.md`. Original `Referrings/` files stay local and unmodified.
+Do not present electrical-input efficiency as pump shaft efficiency, infer a
+waveform from an overall-vibration transmitter, or invent equipment alarm limits.
+
 Add a live Siemens driver only after the protocol, exact CPU model, connection
 details, signal map and command handshake are known. Start hardware verification
 with reads; do not infer authorization to start physical pumps from permission
