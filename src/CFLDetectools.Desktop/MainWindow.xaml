@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:CFLDetectools.Desktop"
-        Title="CFLDetectools — Pump Test Station" Height="940" Width="1420"
-        MinHeight="740" MinWidth="1180" Background="#F1F5F9" WindowStartupLocation="CenterScreen"
+        Title="{local:Loc Key='CFLDetectools — Pump Test Station'}" Height="940" Width="1420"
+        MinHeight="740" MinWidth="1180" Background="#F1F5F9" WindowStartupLocation="CenterScreen" FontFamily="Microsoft YaHei UI, Segoe UI"
         Loaded="OnLoaded" Closed="OnClosed">
     <Window.Resources>
         <Style TargetType="Button"><Setter Property="Padding" Value="14,8" /><Setter Property="Margin" Value="0,0,8,0" /></Style>
@@ -25,18 +25,25 @@
     <DockPanel>
         <Border DockPanel.Dock="Top" Background="#122D42" Padding="24,16">
             <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock Text="CFLDetectools / Pump Test Station" Foreground="White" FontSize="25" FontWeight="SemiBold" />
-                    <TextBlock Text="S7-200 SMART · PLC inputs + direct instruments + waveform acquisition" Foreground="#C8DEE8" Margin="0,5,0,0" />
+                    <TextBlock Text="{local:Loc Key='CFLDetectools / Pump Test Station'}" Foreground="White" FontSize="25" FontWeight="SemiBold" />
+                    <TextBlock Text="{local:Loc Key='S7-200 SMART · PLC inputs + direct instruments + waveform acquisition'}" Foreground="#C8DEE8" Margin="0,5,0,0" />
                 </StackPanel>
-                <TextBlock x:Name="ConnectionText" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="White" Text="Initializing simulator" />
+                <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Center">
+                    <ComboBox x:Name="LanguageBox" Width="120" HorizontalAlignment="Right" SelectedValuePath="Tag" SelectedIndex="0" SelectionChanged="OnLanguageChanged">
+                        <ComboBoxItem Content="中文" Tag="zh-CN" />
+                        <ComboBoxItem Content="English" Tag="en" />
+                    </ComboBox>
+                    <TextBlock x:Name="ConnectionText" HorizontalAlignment="Right" Margin="0,8,0,0" Foreground="White" Text="{local:Loc Key='Initializing simulator'}" />
+                </StackPanel>
             </Grid>
         </Border>
         <Border DockPanel.Dock="Top" Background="#FFF0C2" Padding="24,10">
-            <TextBlock Text="SIMULATION — Generated measurements and simulated connection diagnostics. No PLC, transmitter or DAQ hardware is connected." TextWrapping="Wrap" />
+            <TextBlock Text="{local:Loc Key='SIMULATION — Generated measurements and simulated connection diagnostics. No PLC, transmitter or DAQ hardware is connected.'}" TextWrapping="Wrap" />
         </Border>
         <Border DockPanel.Dock="Bottom" Background="#E2E8F0" Padding="20,9">
-            <TextBlock x:Name="MessageText" Text="Select a pump and start it to explore simulated test measurements." TextWrapping="Wrap" />
+            <TextBlock x:Name="MessageText" Text="{local:Loc Key='Select a pump and start it to explore simulated test measurements.'}" TextWrapping="Wrap" />
         </Border>
         <Grid Margin="20">
             <Grid.ColumnDefinitions><ColumnDefinition Width="270" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
@@ -44,99 +51,99 @@
                 <StackPanel>
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
-                            <TextBlock Text="PUMP CONTROL" FontWeight="SemiBold" Margin="0,0,0,12" />
+                            <TextBlock Text="{local:Loc Key='PUMP CONTROL'}" FontWeight="SemiBold" Margin="0,0,0,12" />
                             <DataGrid x:Name="Pumps" Height="110" SelectionMode="Single" SelectionUnit="FullRow" SelectionChanged="OnSelectionChanged">
-                                <DataGrid.Columns><DataGridTextColumn Header="Pump" Binding="{Binding Id}" Width="*" /><DataGridTextColumn Header="Status" Binding="{Binding State}" Width="*" /></DataGrid.Columns>
+                                <DataGrid.Columns><DataGridTextColumn Header="{local:Loc Key='Pump'}" Binding="{Binding Id}" Width="*" /><DataGridTextColumn Header="{local:Loc Key='Status'}" Binding="{Binding State}" Width="*" /></DataGrid.Columns>
                             </DataGrid>
-                            <TextBlock x:Name="PermissiveText" Text="Waiting for status" Margin="0,12" TextWrapping="Wrap" />
-                            <WrapPanel><Button x:Name="StartButton" Content="Start demo" IsEnabled="False" Click="OnStart" /><Button x:Name="StopButton" Content="Stop demo" IsEnabled="False" Click="OnStop" /></WrapPanel>
+                            <TextBlock x:Name="PermissiveText" Text="{local:Loc Key='Waiting for status'}" Margin="0,12" TextWrapping="Wrap" />
+                            <WrapPanel><Button x:Name="StartButton" Content="{local:Loc Key='Start demo'}" IsEnabled="False" Click="OnStart" /><Button x:Name="StopButton" Content="{local:Loc Key='Stop demo'}" IsEnabled="False" Click="OnStop" /></WrapPanel>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
-                            <TextBlock Text="DEMO SCENARIO" FontWeight="SemiBold" Margin="0,0,0,10" />
+                            <TextBlock Text="{local:Loc Key='DEMO SCENARIO'}" FontWeight="SemiBold" Margin="0,0,0,10" />
                             <ComboBox x:Name="ScenarioBox" SelectionChanged="OnScenarioChanged" />
-                            <TextBlock Text="Simulated valve / flow setting" Margin="0,16,0,4" />
+                            <TextBlock Text="{local:Loc Key='Simulated valve / flow setting'}" Margin="0,16,0,4" />
                             <Slider x:Name="FlowSlider" Minimum="10" Maximum="160" Value="100" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="OnFlowChanged" />
                             <TextBlock x:Name="FlowSettingText" Text="100 m³/h" Margin="0,5,0,0" />
-                            <TextBlock Text="Change flow and capture several points to build a demo performance curve." TextWrapping="Wrap" Foreground="SlateGray" Margin="0,14,0,0" />
+                            <TextBlock Text="{local:Loc Key='Change flow and capture several points to build a demo performance curve.'}" TextWrapping="Wrap" Foreground="SlateGray" Margin="0,14,0,0" />
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
-                            <TextBlock Text="SIMULATED CONNECTIONS" FontWeight="SemiBold" />
-                            <TextBlock x:Name="RouteText" Text="No samples" Margin="0,12,0,0" TextWrapping="Wrap" />
-                            <TextBlock Text="An analog value alone cannot prove that a transmitter is connected. Live diagnostics require device status and channel configuration." TextWrapping="Wrap" Foreground="SlateGray" Margin="0,14,0,0" />
+                            <TextBlock Text="{local:Loc Key='SIMULATED CONNECTIONS'}" FontWeight="SemiBold" />
+                            <TextBlock x:Name="RouteText" Text="{local:Loc Key='No samples'}" Margin="0,12,0,0" TextWrapping="Wrap" />
+                            <TextBlock Text="{local:Loc Key='An analog value alone cannot prove that a transmitter is connected. Live diagnostics require device status and channel configuration.'}" TextWrapping="Wrap" Foreground="SlateGray" Margin="0,14,0,0" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
             </ScrollViewer>
             <TabControl Grid.Column="1" Background="Transparent" BorderThickness="0">
-                <TabItem Header="Live measurements">
+                <TabItem Header="{local:Loc Key='Live measurements'}">
                     <Grid Margin="12">
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                         <UniformGrid Columns="4">
-                            <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="FLOW · m³/h" /><TextBlock x:Name="FlowValue" Text="—" Style="{StaticResource Metric}" /></StackPanel></Border>
-                            <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="TOTAL HEAD · m" /><TextBlock x:Name="HeadValue" Text="—" Style="{StaticResource Metric}" /></StackPanel></Border>
-                            <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="PUMP EFFICIENCY · %" /><TextBlock x:Name="EfficiencyValue" Text="—" Style="{StaticResource Metric}" /></StackPanel></Border>
-                            <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="HYDRAULIC POWER · kW" /><TextBlock x:Name="HydraulicValue" Text="—" Style="{StaticResource Metric}" /></StackPanel></Border>
+                            <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="{local:Loc Key='FLOW · m³/h'}" /><TextBlock x:Name="FlowValue" Text="—" Style="{StaticResource Metric}" /></StackPanel></Border>
+                            <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="{local:Loc Key='TOTAL HEAD · m'}" /><TextBlock x:Name="HeadValue" Text="—" Style="{StaticResource Metric}" /></StackPanel></Border>
+                            <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="{local:Loc Key='PUMP EFFICIENCY · %'}" /><TextBlock x:Name="EfficiencyValue" Text="—" Style="{StaticResource Metric}" /></StackPanel></Border>
+                            <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="{local:Loc Key='HYDRAULIC POWER · kW'}" /><TextBlock x:Name="HydraulicValue" Text="—" Style="{StaticResource Metric}" /></StackPanel></Border>
                         </UniformGrid>
                         <StackPanel Grid.Row="1" Margin="0,0,0,14">
-                            <TextBlock x:Name="PerformanceText" Text="Waiting for valid measurements" TextWrapping="Wrap" />
-                            <TextBlock Text="Values below are simulated. Only Good, fresh channels are used in calculations; quality timeout is 3 s." Foreground="SlateGray" Margin="0,6,0,0" TextWrapping="Wrap" />
+                            <TextBlock x:Name="PerformanceText" Text="{local:Loc Key='Waiting for valid measurements'}" TextWrapping="Wrap" />
+                            <TextBlock Text="{local:Loc Key='Values below are simulated. Only Good, fresh channels are used in calculations; quality timeout is 3 s.'}" Foreground="SlateGray" Margin="0,6,0,0" TextWrapping="Wrap" />
                         </StackPanel>
                         <DataGrid x:Name="ChannelsGrid" Grid.Row="2">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Transmitter / instrument" Binding="{Binding Name}" Width="2*" />
-                                <DataGridTextColumn Header="Route" Binding="{Binding Route}" Width="*" />
-                                <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="90" />
-                                <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="75" />
-                                <DataGridTextColumn Header="Quality" Binding="{Binding Quality}" Width="100" />
-                                <DataGridTextColumn Header="Age · s" Binding="{Binding Age}" Width="70" />
+                                <DataGridTextColumn Header="{local:Loc Key='Transmitter / instrument'}" Binding="{Binding Name}" Width="2*" />
+                                <DataGridTextColumn Header="{local:Loc Key='Route'}" Binding="{Binding Route}" Width="*" />
+                                <DataGridTextColumn Header="{local:Loc Key='Value'}" Binding="{Binding Value}" Width="90" />
+                                <DataGridTextColumn Header="{local:Loc Key='Unit'}" Binding="{Binding Unit}" Width="75" />
+                                <DataGridTextColumn Header="{local:Loc Key='Quality'}" Binding="{Binding Quality}" Width="100" />
+                                <DataGridTextColumn Header="{local:Loc Key='Age · s'}" Binding="{Binding Age}" Width="70" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>
                 </TabItem>
-                <TabItem Header="Bearings">
+                <TabItem Header="{local:Loc Key='Bearings'}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="16">
-                        <TextBlock x:Name="BearingText" Text="Waiting for bearing measurements" TextWrapping="Wrap" FontWeight="SemiBold" />
-                        <TextBlock x:Name="VibrationText" Text="Velocity waveform unavailable" Margin="0,10,0,14" TextWrapping="Wrap" />
-                        <TextBlock Text="Drive-end velocity waveform · mm/s (first 31 ms)" /><local:LinePlot x:Name="WaveformPlot" Height="175" Margin="0,6,0,14" />
-                        <TextBlock Text="Drive-end single-sided velocity amplitude spectrum · 0–512 Hz" /><local:LinePlot x:Name="SpectrumPlot" Height="175" Margin="0,6,0,14" />
-                        <TextBlock Text="Drive-end bearing temperature · recent valid samples" /><local:LinePlot x:Name="TemperaturePlot" Height="175" Margin="0,6,0,14" />
-                        <TextBlock Text="Waveform metrics remove the mean; the FFT uses a Hann window with amplitude correction. Overall 4–20 mA vibration values cannot supply an FFT. No bearing-fault diagnosis or ISO severity classification is claimed." TextWrapping="Wrap" Foreground="SlateGray" />
+                        <TextBlock x:Name="BearingText" Text="{local:Loc Key='Waiting for bearing measurements'}" TextWrapping="Wrap" FontWeight="SemiBold" />
+                        <TextBlock x:Name="VibrationText" Text="{local:Loc Key='Velocity waveform unavailable'}" Margin="0,10,0,14" TextWrapping="Wrap" />
+                        <TextBlock Text="{local:Loc Key='Drive-end velocity waveform · mm/s (first 31 ms)'}" /><local:LinePlot x:Name="WaveformPlot" Height="175" Margin="0,6,0,14" />
+                        <TextBlock Text="{local:Loc Key='Drive-end single-sided velocity amplitude spectrum · 0–512 Hz'}" /><local:LinePlot x:Name="SpectrumPlot" Height="175" Margin="0,6,0,14" />
+                        <TextBlock Text="{local:Loc Key='Drive-end bearing temperature · recent valid samples'}" /><local:LinePlot x:Name="TemperaturePlot" Height="175" Margin="0,6,0,14" />
+                        <TextBlock Text="{local:Loc Key='Waveform metrics remove the mean; the FFT uses a Hann window with amplitude correction. Overall 4–20 mA vibration values cannot supply an FFT. No bearing-fault diagnosis or ISO severity classification is claimed.'}" TextWrapping="Wrap" Foreground="SlateGray" />
                     </StackPanel></ScrollViewer>
                 </TabItem>
-                <TabItem Header="Test points and curves">
+                <TabItem Header="{local:Loc Key='Test points and curves'}">
                     <Grid Margin="16">
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="230" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                        <WrapPanel><Button x:Name="CaptureButton" Content="Capture valid demo point" IsEnabled="False" Click="OnCapture" /><Button Content="Export session CSV" Click="OnExport" /></WrapPanel>
-                        <TextBlock Grid.Row="1" Text="Curves show captured points for the selected pump and current rig settings. Lines connect measured points; no fit or acceptance grade is applied. CSV contains all session points and rig settings." TextWrapping="Wrap" Foreground="SlateGray" Margin="0,12" />
+                        <WrapPanel><Button x:Name="CaptureButton" Content="{local:Loc Key='Capture valid demo point'}" IsEnabled="False" Click="OnCapture" /><Button Content="{local:Loc Key='Export session CSV'}" Click="OnExport" /></WrapPanel>
+                        <TextBlock Grid.Row="1" Text="{local:Loc Key='Curves show captured points for the selected pump and current rig settings. Lines connect measured points; no fit or acceptance grade is applied. CSV contains all session points and rig settings.'}" TextWrapping="Wrap" Foreground="SlateGray" Margin="0,12" />
                         <UniformGrid Grid.Row="2" Columns="2"><local:LinePlot x:Name="HeadCurve" Margin="0,0,12,0" /><local:LinePlot x:Name="EfficiencyCurve" /></UniformGrid>
                         <DataGrid x:Name="TestPointsGrid" Grid.Row="3" Margin="0,12,0,0">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="UTC time" Binding="{Binding Time, StringFormat=HH:mm:ss}" Width="*" />
-                                <DataGridTextColumn Header="Pump" Binding="{Binding PumpId}" Width="*" />
-                                <DataGridTextColumn Header="Q · m³/h" Binding="{Binding Result.FlowM3H, StringFormat=F2}" Width="*" />
-                                <DataGridTextColumn Header="H · m" Binding="{Binding Result.HeadM, StringFormat=F2}" Width="*" />
-                                <DataGridTextColumn Header="Shaft · kW" Binding="{Binding Result.ShaftPowerKw, StringFormat=F3}" Width="*" />
-                                <DataGridTextColumn Header="Pump η · %" Binding="{Binding Result.PumpEfficiencyPercent, StringFormat=F2}" Width="*" />
+                                <DataGridTextColumn Header="{local:Loc Key='UTC time'}" Binding="{Binding Time, StringFormat=HH:mm:ss}" Width="*" />
+                                <DataGridTextColumn Header="{local:Loc Key='Pump'}" Binding="{Binding PumpId}" Width="*" />
+                                <DataGridTextColumn Header="{local:Loc Key='Q · m³/h'}" Binding="{Binding Result.FlowM3H, StringFormat=F2}" Width="*" />
+                                <DataGridTextColumn Header="{local:Loc Key='H · m'}" Binding="{Binding Result.HeadM, StringFormat=F2}" Width="*" />
+                                <DataGridTextColumn Header="{local:Loc Key='Shaft · kW'}" Binding="{Binding Result.ShaftPowerKw, StringFormat=F3}" Width="*" />
+                                <DataGridTextColumn Header="{local:Loc Key='Pump η · %'}" Binding="{Binding Result.PumpEfficiencyPercent, StringFormat=F2}" Width="*" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>
                 </TabItem>
-                <TabItem Header="Rig and warning settings">
+                <TabItem Header="{local:Loc Key='Rig and warning settings'}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="22" MaxWidth="650" HorizontalAlignment="Left">
-                        <TextBlock Text="DEMONSTRATION RIG" FontSize="18" FontWeight="SemiBold" />
-                        <TextBlock Text="These initial values describe the simulated water test. Replace them with the actual fluid and pressure-tap geometry before analyzing site measurements. Both pressures must use the same reference basis." TextWrapping="Wrap" Margin="0,10,0,18" />
-                        <TextBlock Text="Fluid density · kg/m³" /><TextBox x:Name="DensityInput" Text="998.2" />
-                        <TextBlock Text="Suction pipe internal diameter at pressure tap · mm" /><TextBox x:Name="SuctionDiameterInput" Text="100" />
-                        <TextBlock Text="Discharge pipe internal diameter at pressure tap · mm" /><TextBox x:Name="DischargeDiameterInput" Text="100" />
-                        <TextBlock Text="Discharge tap elevation minus suction tap elevation · m" /><TextBox x:Name="ElevationInput" Text="0" />
-                        <TextBlock Text="Optional bearing temperature warning · °C (blank = unconfigured)" /><TextBox x:Name="TemperatureWarningInput" />
-                        <TextBlock Text="Optional bearing velocity RMS warning · mm/s (blank = unconfigured)" /><TextBox x:Name="VibrationWarningInput" />
-                        <Button Content="Apply settings" HorizontalAlignment="Left" Click="OnApplySettings" />
-                        <TextBlock Text="Warnings are operator-configured advisories, not PLC trips. Shaft power uses torque × angular speed. Electrical-input efficiency includes motor/drive losses and is displayed separately. Automatic density compensation, calibration uncertainty and acceptance standards are not yet configured." TextWrapping="Wrap" Foreground="SlateGray" Margin="0,18,0,0" />
+                        <TextBlock Text="{local:Loc Key='DEMONSTRATION RIG'}" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="{local:Loc Key='These initial values describe the simulated water test. Replace them with the actual fluid and pressure-tap geometry before analyzing site measurements. Both pressures must use the same reference basis.'}" TextWrapping="Wrap" Margin="0,10,0,18" />
+                        <TextBlock Text="{local:Loc Key='Fluid density · kg/m³'}" /><TextBox x:Name="DensityInput" Text="998.2" />
+                        <TextBlock Text="{local:Loc Key='Suction pipe internal diameter at pressure tap · mm'}" /><TextBox x:Name="SuctionDiameterInput" Text="100" />
+                        <TextBlock Text="{local:Loc Key='Discharge pipe internal diameter at pressure tap · mm'}" /><TextBox x:Name="DischargeDiameterInput" Text="100" />
+                        <TextBlock Text="{local:Loc Key='Discharge tap elevation minus suction tap elevation · m'}" /><TextBox x:Name="ElevationInput" Text="0" />
+                        <TextBlock Text="{local:Loc Key='Optional bearing temperature warning · °C (blank = unconfigured)'}" /><TextBox x:Name="TemperatureWarningInput" />
+                        <TextBlock Text="{local:Loc Key='Optional bearing velocity RMS warning · mm/s (blank = unconfigured)'}" /><TextBox x:Name="VibrationWarningInput" />
+                        <Button Content="{local:Loc Key='Apply settings'}" HorizontalAlignment="Left" Click="OnApplySettings" />
+                        <TextBlock Text="{local:Loc Key='Warnings are operator-configured advisories, not PLC trips. Shaft power uses torque × angular speed. Electrical-input efficiency includes motor/drive losses and is displayed separately. Automatic density compensation, calibration uncertainty and acceptance standards are not yet configured.'}" TextWrapping="Wrap" Foreground="SlateGray" Margin="0,18,0,0" />
                     </StackPanel></ScrollViewer>
                 </TabItem>
             </TabControl>

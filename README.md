@@ -9,6 +9,9 @@ SMART**. See the [S7-200 SMART integration plan](plc/S7-200-SMART.md).
 ## Current implementation
 
 - WPF test station with simulated pump control and a transmitter/instrument table.
+- Chinese/English UI switch in the upper right (Chinese by default), including
+  live statuses, channel names, charts and operator messages. Switching preserves
+  the current session; numeric values, units and CSV column names remain stable.
 - Separate PLC analog, direct-instrument and waveform-DAQ sample quality.
 - Offline, stale, device-fault and out-of-range signal handling.
 - Total head, hydraulic/shaft power, pump efficiency and electrical-input efficiency.
@@ -38,6 +41,10 @@ capture several points in **Test points and curves**, then export CSV. Configure
 fluid/geometry and optional advisory warnings in **Rig and warning settings**.
 Settings and captured points are session-only; export before closing. No PLC
 connection settings or Siemens software are needed for this demo.
+
+Use the **中文 / English** selector in the upper right to change the interface
+language immediately. Each new application session starts in Chinese. Native
+Windows file-dialog buttons follow the Windows display language.
 
 ## Develop on another Windows laptop
 

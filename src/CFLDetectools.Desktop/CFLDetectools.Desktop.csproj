@@ -5,6 +5,7 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Localization/chinese.json" />
     <ProjectReference Include="../CFLDetectools.Core/CFLDetectools.Core.csproj" />
     <ProjectReference Include="../CFLDetectools.Simulator/CFLDetectools.Simulator.csproj" />
   </ItemGroup>

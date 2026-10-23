@@ -35,6 +35,12 @@ in `docs/measurement-methods.md`; reference-review findings are in
 Do not present electrical-input efficiency as pump shaft efficiency, infer a
 waveform from an overall-vibration transmitter, or invent equipment alarm limits.
 
+The WPF UI supports Chinese (default) and English through `UiText` and
+`Localization/chinese.json`. Use `local:Loc` in XAML and translation keys for
+operator-visible C# messages. Switching languages must preserve session data and
+settings. Keep units, internal identifiers and CSV schema independent of UI language.
+`scripts/verify.ps1` checks translation coverage and formatting placeholders.
+
 Add a live Siemens driver only after the protocol, exact CPU model, connection
 details, signal map and command handshake are known. Start hardware verification
 with reads; do not infer authorization to start physical pumps from permission

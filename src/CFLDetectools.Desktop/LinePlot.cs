@@ -31,7 +31,7 @@ public sealed class LinePlot : FrameworkElement
         DrawText(drawing, XLabel, Math.Max(65, w / 2 - 50), h - 20, 11);
         if (_points.Count == 0)
         {
-            DrawText(drawing, "No valid samples", rect.Left + 20, rect.Top + 25, 14);
+            DrawText(drawing, UiText.Shared.Translate("No valid samples"), rect.Left + 20, rect.Top + 25, 14);
             return;
         }
         var xmin = _points.Min(p => p.X);
@@ -67,7 +67,7 @@ public sealed class LinePlot : FrameworkElement
     private void DrawText(DrawingContext drawing, string value, double x, double y, double size)
     {
         var text = new FormattedText(value, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
-            new Typeface("Segoe UI"), size, Brushes.SlateGray, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+            new Typeface("Microsoft YaHei UI"), size, Brushes.SlateGray, VisualTreeHelper.GetDpi(this).PixelsPerDip);
         drawing.DrawText(text, new Point(x, y));
     }
 }
