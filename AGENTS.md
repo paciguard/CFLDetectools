@@ -20,5 +20,15 @@ and in https://github.com/paciguard/CFLDetectools.
 ## Application
 
 The desktop application uses C#/.NET 8 and WPF. The current communication client
-is an in-memory simulator. Add a live Siemens driver only after the protocol,
-hardware details, signal map and command handshake are known.
+is an in-memory simulator. The user confirmed the target PLC family is S7-200
+SMART, programmed with STEP 7-Micro/WIN SMART. S7-PLCSIM V14 is not a simulator
+for this CPU family. See `plc/S7-200-SMART.md` for the integration plan.
+
+The user plans to develop and debug hardware on another Windows laptop later.
+Keep project paths relative and document setup from a clean Git clone. Do not
+assume this machine's Siemens installation or network settings exist there.
+
+Add a live Siemens driver only after the protocol, exact CPU model, connection
+details, signal map and command handshake are known. Start hardware verification
+with reads; do not infer authorization to start physical pumps from permission
+to try the installed engineering software.

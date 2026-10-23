@@ -3,6 +3,9 @@
 Windows desktop application starter for Siemens PLC signals and pump running status
 monitoring and control. The desktop interface uses C# and WPF.
 
+The confirmed PLC family is **S7-200 SMART**, programmed using **STEP 7-Micro/WIN
+SMART**. See the [S7-200 SMART integration plan](plc/S7-200-SMART.md).
+
 ## Current implementation
 
 - WPF pump table with running/stopped/faulted state, ready, fault and remote signals.
@@ -27,6 +30,30 @@ dotnet run --project src/CFLDetectools.Desktop
 Select P-101 or P-102 and use Start/Stop to change its simulated running feedback.
 No PLC connection settings are needed for this demo.
 
+## Develop on another Windows laptop
+
+Install Git and the .NET 8 SDK with Windows Desktop build support. If using Visual
+Studio, install its .NET desktop development workload. Install a compatible
+STEP 7-Micro/WIN SMART version separately when preparing for hardware debugging;
+Siemens software is not bundled in this repository. The in-memory simulator
+does not require Siemens software.
+
+Clone the repository into any writable local folder:
+
+```powershell
+git clone https://github.com/paciguard/CFLDetectools.git
+cd CFLDetectools
+./scripts/verify.ps1
+dotnet run --project src/CFLDetectools.Desktop
+```
+
+Commit and push completed work before switching computers. On the other computer,
+start from a clean working tree and run `git pull --ff-only` before editing. Local
+changes must be committed or otherwise preserved before pulling; do not overwrite
+them. The project uses relative paths and has no dependency on the original PC's
+drive letters or Siemens installation paths. CPU addresses and network settings
+must be configured locally when hardware integration is added.
+
 Run the dependency-free behavior checks explicitly (`dotnet test` does not run them):
 
 ```powershell
@@ -46,7 +73,7 @@ dotnet run --project tests/CFLDetectools.Checks
 
 ## Next integration inputs
 
-1. Siemens CPU model, firmware and TIA Portal/STEP 7 version.
+1. Exact S7-200 SMART CPU model, firmware and Micro/WIN SMART version.
 2. Available communication protocol and connection parameters.
 3. Pump count, signal list, addresses and data types.
 4. Start/Stop request handshake, interlocks and feedback timing.
