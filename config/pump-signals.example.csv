@@ -1,0 +1,7 @@
+pump_id,signal,direction,data_type,plc_address,description
+P-101,Running,Read,BOOL,,Motor running feedback
+P-101,Ready,Read,BOOL,,PLC ready/permissive feedback
+P-101,Fault,Read,BOOL,,Pump or motor fault
+P-101,RemoteMode,Read,BOOL,,Remote operation enabled
+P-101,StartRequest,Write,BOOL,,Start request with PLC-defined handshake
+P-101,StopRequest,Write,BOOL,,Stop request with PLC-defined handshake
