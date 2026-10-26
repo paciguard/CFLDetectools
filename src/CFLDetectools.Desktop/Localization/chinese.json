@@ -1,6 +1,6 @@
 {
-  "CFLDetectools — Pump Test Station": "CFLDetectools — 泵性能试验台",
-  "CFLDetectools / Pump Test Station": "CFLDetectools / 泵性能试验台",
+  "CFLDetectools — Pump Test Station": "CFLDetectools — 泵性能监测控制平台",
+  "CFLDetectools / Pump Test Station": "CFLDetectools / 泵性能监测控制平台",
   "S7-200 SMART · PLC inputs + direct instruments + waveform acquisition": "S7-200 SMART · PLC 输入 + 直连仪表 + 波形采集",
   "Initializing simulator": "正在初始化模拟器",
   "SIMULATION — Generated measurements and simulated connection diagnostics. No PLC, transmitter or DAQ hardware is connected.": "演示模式 — 测量数据和连接诊断均为模拟，尚未连接 PLC、变送器或数据采集硬件。",
