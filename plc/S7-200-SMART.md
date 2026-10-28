@@ -43,8 +43,26 @@ the application does not yet load it.
 5. Test command handling only after the address map and handshake are reviewed
    and the user authorizes the specific equipment operation.
 
-No hardware connection or Siemens driver has been validated yet. Do not treat a
-successful in-memory simulator check as a hardware communication test.
+## Connection diagnostic scope
+
+The desktop **PLC diagnostics** tab establishes a TCP / COTP / S7 Setup
+Communication session and holds it until the operator disconnects or exits. It uses the S7-200 SMART rack-0/slot-0
+preset: local TSAP `01.00`, remote TSAP `03.00`, TCP port 102. It negotiates a PDU
+of at most 480 bytes. A successful result proves session establishment at the
+displayed connection time; it does not verify CPU identity, pump addresses, I/O access,
+signal quality, application-level S7 responsiveness or command handling. TCP keepalive
+and a pending socket read detect transport closure, potentially after a delay. They do
+not guarantee the PLC program is operating or that its data is accessible.
+
+The diagnostic has no variable-read, variable-write, program-transfer, CPU-control
+or clock-setting operations. It is deliberately separate from `IPumpClient` and
+does not consume the reference project's signal map. All displayed pump data and
+demo commands remain simulated regardless of this diagnostic's result. A live
+signal driver still requires the prerequisites above.
+
+Automated checks use loopback protocol fixtures, including fragmented replies,
+invalid packets, S7 rejection, premature EOF, timeout and cancellation. Hardware
+checks must be requested explicitly and reported separately from these checks.
 
 ## Siemens references
 
@@ -52,3 +70,7 @@ successful in-memory simulator check as a hardware communication test.
   CPU models, Ethernet communication and ISO-on-TCP.
 - [S7-PLCSIM V14 online help](https://cache.industry.siemens.com/dl/files/755/109741755/att_897166/v1/S7-PLCSIMenUS_en-US.pdf):
   supported CPU families and simulation startup requirements.
+- [RFC 1006](https://www.rfc-editor.org/rfc/rfc1006): TPKT framing over TCP.
+- [S7NetPlus SMART TSAP presets](https://github.com/S7NetPlus/s7netplus/blob/main/S7.Net/Protocol/TsapPair.cs)
+  and [connection establishment](https://github.com/S7NetPlus/s7netplus/blob/main/S7.Net/PlcAsynchronous.cs):
+  primary implementation references for COTP connection and S7 setup negotiation.

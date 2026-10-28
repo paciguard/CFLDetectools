@@ -19,8 +19,11 @@ SMART**. See the [S7-200 SMART integration plan](plc/S7-200-SMART.md).
 - Captured Q–H/efficiency test points, plots and CSV session export.
 - Shared acquisition contracts, an in-memory simulator and executable behavior checks.
 
-**The current application runs only in simulation mode.** No Siemens communication
-driver is installed, and no command reaches equipment. Live transmitter diagnostics,
+**Pump controls, measurements and exports run in simulation mode.** The separate
+**PLC diagnostics** tab can establish and hold one real S7-200 SMART diagnostic
+session (TCP, ISO transport and S7 session negotiation). It does not read pump
+signals or write anything to equipment. No live `IPumpClient` driver is
+installed. Live transmitter diagnostics,
 device protocols, persistent history, equipment alarms, user permissions and
 deployment remain future work. See [measurement methods and limits](docs/measurement-methods.md)
 and the [reference review](docs/reference-review.md).
@@ -41,6 +44,40 @@ capture several points in **Test points and curves**, then export CSV. Configure
 fluid/geometry and optional advisory warnings in **Rig and warning settings**.
 Settings and captured points are session-only; export before closing. No PLC
 connection settings or Siemens software are needed for this demo.
+
+## Test a PLC connection while simulating measurements
+
+1. Connect the PC to the S7-200 SMART Ethernet network. Confirm the intended CPU
+   in STEP 7-Micro/WIN SMART and put the PC's Ethernet interface on the appropriate
+   subnet. Keep the existing PLC program and operating mode.
+2. Start CFLDetectools. In **PLC diagnostics**, enter the PLC's IPv4 address and
+   choose **Connect to PLC**. Connection setup has a five-second overall timeout
+   and can be cancelled. It uses TCP port 102 and the SMART rack-0/slot-0 TSAP preset
+   (local `01.00`, remote `03.00`).
+3. Check all three results: TCP, ISO transport and S7 session. TCP alone does not
+   establish that S7 communication works. A successful test also shows the
+   negotiated S7 PDU size and the UTC time of the connection. The application
+   keeps this one diagnostic session open until you disconnect or close it. The
+   header displays its state. TCP keepalive helps detect a lost transport, but
+   detection may be delayed and does not verify PLC data or program identity.
+4. Use **Start demo**, the flow slider, scenario selector and measurement tabs to
+   test the simulation independently. Even with an active PLC diagnostic session,
+   all pump controls, measurements, captured points and CSV exports remain simulated.
+
+The endpoint is session-only and survives UI language switching. No PLC address
+is committed or automatically discovered, and no connection is attempted at startup.
+Changing the address clears the previous result. Reconnect after network changes.
+No reference program addresses are adopted by this diagnostic.
+
+For a manual diagnostic from the project folder after building:
+
+```powershell
+dotnet run --project tests/CFLDetectools.Checks --configuration Release --no-build -- --probe-plc <PLC_IPv4>
+```
+
+Replace `<PLC_IPv4>` with the actual address. This explicit command contacts the
+endpoint; normal verification uses only a local fake peer for diagnostic checks.
+See [the integration plan](plc/S7-200-SMART.md) before adding actual signal access.
 
 Use the **中文 / English** selector in the upper right to change the interface
 language immediately. Each new application session starts in Chinese. Native

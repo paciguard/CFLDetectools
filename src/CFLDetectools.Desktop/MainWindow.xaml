@@ -36,11 +36,12 @@
                         <ComboBoxItem Content="English" Tag="en" />
                     </ComboBox>
                     <TextBlock x:Name="ConnectionText" HorizontalAlignment="Right" Margin="0,8,0,0" Foreground="White" Text="{local:Loc Key='Initializing simulator'}" />
+                    <TextBlock x:Name="PlcConnectionText" HorizontalAlignment="Right" Margin="0,4,0,0" Foreground="#C8DEE8" Text="{local:Loc Key='PLC session: disconnected'}" />
                 </StackPanel>
             </Grid>
         </Border>
         <Border DockPanel.Dock="Top" Background="#FFF0C2" Padding="24,10">
-            <TextBlock Text="{local:Loc Key='SIMULATION — Generated measurements and simulated connection diagnostics. No PLC, transmitter or DAQ hardware is connected.'}" TextWrapping="Wrap" />
+            <TextBlock Text="{local:Loc Key='SIMULATION — Pump controls, measurements and exports are simulated. The PLC diagnostic session is separate.'}" TextWrapping="Wrap" />
         </Border>
         <Border DockPanel.Dock="Bottom" Background="#E2E8F0" Padding="20,9">
             <TextBlock x:Name="MessageText" Text="{local:Loc Key='Select a pump and start it to explore simulated test measurements.'}" TextWrapping="Wrap" />
@@ -79,6 +80,35 @@
                 </StackPanel>
             </ScrollViewer>
             <TabControl Grid.Column="1" Background="Transparent" BorderThickness="0">
+                <TabItem Header="{local:Loc Key='PLC diagnostics'}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="12" MaxWidth="850" HorizontalAlignment="Left">
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="{local:Loc Key='PLC diagnostic connection'}" FontSize="22" FontWeight="SemiBold" />
+                                    <TextBlock Text="{local:Loc Key='S7-200 SMART · ISO-on-TCP · port 102'}" Margin="0,8,0,16" />
+                                    <TextBlock Text="{local:Loc Key='PLC IPv4 address'}" />
+                                    <TextBox x:Name="PlcIpInput" Width="280" HorizontalAlignment="Left" MaxLength="15" TextChanged="OnPlcEndpointChanged" />
+                                    <WrapPanel Margin="0,0,0,16">
+                                        <Button x:Name="PlcTestButton" Content="{local:Loc Key='Connect to PLC'}" Click="OnTestPlcConnection" />
+                                        <Button x:Name="PlcCancelButton" Content="{local:Loc Key='Disconnect'}" IsEnabled="False" Click="OnCancelPlcTest" />
+                                    </WrapPanel>
+                                    <TextBlock x:Name="PlcTestStatus" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <TextBlock x:Name="PlcTestDetails" Margin="0,10,0,0" TextWrapping="Wrap" />
+                                    <TextBlock x:Name="PlcCheckedAtText" Margin="0,10,0,0" TextWrapping="Wrap" Foreground="SlateGray" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel>
+                                    <TextBlock Text="{local:Loc Key='About this connection'}" FontWeight="SemiBold" Margin="0,0,0,10" />
+                                    <TextBlock Text="{local:Loc Key='The application keeps one S7 diagnostic session open until you disconnect or close the application. TCP keepalive monitors the transport; detecting a broken cable may take time.'}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{local:Loc Key='Only connection setup is sent. This session does not read pump signals or send equipment commands, program downloads or CPU mode changes.'}" Margin="0,12,0,0" TextWrapping="Wrap" />
+                                    <TextBlock Text="{local:Loc Key='Use Start demo to explore simulated pumps, measurements, vibration and test curves. Simulation continues independently of the PLC connection.'}" Margin="0,12,0,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
                 <TabItem Header="{local:Loc Key='Live measurements'}">
                     <Grid Margin="12">
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>

@@ -39,6 +39,13 @@ public partial class MainWindow : Window
     private string? _failure;
     private string _messageKey = "Select a pump and start it to explore simulated test measurements.";
     private object[] _messageArgs = Array.Empty<object>();
+    private CancellationTokenSource? _plcTestCancellation;
+    private PlcDiagnosticResult? _plcTestResult;
+    private PlcDiagnosticSession? _plcSession;
+    private enum PlcTestState { Untested, Invalid, Testing, Connected, Failed, Cancelled, Disconnected, Lost }
+    private PlcTestState _plcTestState;
+    private bool _plcTestBusy;
+    private bool _windowClosed;
 
     private sealed record PumpRow(PumpSnapshot Snapshot)
     {
@@ -355,6 +362,7 @@ public partial class MainWindow : Window
             foreach (var plot in new[] { WaveformPlot, SpectrumPlot, TemperaturePlot, HeadCurve, EfficiencyCurve }) plot.InvalidateVisual();
             RenderPumpRows();
             RenderStationStatus();
+            RenderPlcDiagnostic();
             if (_lastFrame is not null) RenderMeasurements(_lastFrame, recordHistory: false);
             else
             {
@@ -373,8 +381,127 @@ public partial class MainWindow : Window
         ApplyLanguage();
     }
 
+    private void OnPlcEndpointChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_ready) return;
+        _plcTestResult = null;
+        _plcTestState = PlcTestState.Untested;
+        RenderPlcDiagnostic();
+    }
+
+    private async void OnTestPlcConnection(object sender, RoutedEventArgs e)
+    {
+        if (_plcTestBusy) return;
+        _plcTestResult = null;
+        if (!PlcConnectionDiagnostic.TryParseAddress(PlcIpInput.Text, out var address))
+        {
+            _plcTestState = PlcTestState.Invalid;
+            RenderPlcDiagnostic();
+            return;
+        }
+        _plcTestBusy = true;
+        _plcTestState = PlcTestState.Testing;
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token);
+        _plcTestCancellation = cancellation;
+        RenderPlcDiagnostic();
+        try
+        {
+            var connection = await PlcConnectionDiagnostic.ConnectAsync(address, cancellation.Token);
+            if (_windowClosed) { connection.Session?.Dispose(); return; }
+            if (cancellation.IsCancellationRequested)
+            {
+                connection.Session?.Dispose();
+                _plcTestState = PlcTestState.Cancelled;
+                return;
+            }
+            _plcTestResult = connection.Result;
+            _plcSession = connection.Session;
+            _plcTestState = _plcSession is not null ? PlcTestState.Connected : PlcTestState.Failed;
+            if (_plcSession is not null) _ = WatchPlcSessionAsync(_plcSession);
+        }
+        catch (OperationCanceledException)
+        {
+            if (!_windowClosed) _plcTestState = PlcTestState.Cancelled;
+        }
+        finally
+        {
+            _plcTestCancellation = null;
+            _plcTestBusy = false;
+            if (!_windowClosed) RenderPlcDiagnostic();
+        }
+    }
+
+    private void OnCancelPlcTest(object sender, RoutedEventArgs e)
+    {
+        if (_plcTestBusy) { _plcTestCancellation?.Cancel(); return; }
+        var session = _plcSession;
+        _plcSession = null;
+        session?.Dispose();
+        _plcTestState = PlcTestState.Disconnected;
+        RenderPlcDiagnostic();
+    }
+
+    private async Task WatchPlcSessionAsync(PlcDiagnosticSession session)
+    {
+        try { await session.WaitForDisconnectAsync(_lifetime.Token); }
+        catch (Exception error) when (error is OperationCanceledException or IOException or System.Net.Sockets.SocketException or ObjectDisposedException) { }
+        if (_windowClosed || !ReferenceEquals(_plcSession, session)) return;
+        _plcSession = null;
+        session.Dispose();
+        _plcTestState = PlcTestState.Lost;
+        RenderPlcDiagnostic();
+    }
+
+    private void RenderPlcDiagnostic()
+    {
+        PlcIpInput.IsEnabled = !_plcTestBusy && _plcSession is null;
+        PlcTestButton.IsEnabled = !_plcTestBusy && _plcSession is null;
+        PlcCancelButton.IsEnabled = _plcTestBusy || _plcSession is not null;
+        PlcCancelButton.Content = _plcTestBusy ? T("Cancel") : T("Disconnect");
+        PlcConnectionText.Text = _plcSession is not null ? T("PLC session: connected") : T("PLC session: disconnected");
+        PlcTestStatus.Text = _plcTestState switch
+        {
+            PlcTestState.Invalid => T("Enter a valid unicast PLC IPv4 address."),
+            PlcTestState.Testing => T("Connecting to PLC..."),
+            PlcTestState.Connected => T("S7 diagnostic session connected."),
+            PlcTestState.Failed => T("PLC connection failed."),
+            PlcTestState.Cancelled => T("PLC connection cancelled."),
+            PlcTestState.Disconnected => T("PLC session disconnected."),
+            PlcTestState.Lost => T("PLC session lost or closed by the peer."),
+            _ => T("PLC session not connected.")
+        };
+        PlcTestStatus.Foreground = _plcSession is not null
+            ? System.Windows.Media.Brushes.Teal : System.Windows.Media.Brushes.SlateGray;
+        PlcTestDetails.Text = "";
+        PlcCheckedAtText.Text = "";
+        if (_plcTestResult is not { } result) return;
+        string Stage(PlcDiagnosticStage stage) => result.Stage > stage ? T("Passed")
+            : result.Stage == stage ? T("Failed") : T("Not tested");
+        PlcTestDetails.Text = T("TCP: {0} · ISO transport: {1} · S7 session: {2}",
+            Stage(PlcDiagnosticStage.Tcp), Stage(PlcDiagnosticStage.IsoTransport), Stage(PlcDiagnosticStage.S7Session));
+        if (result.SessionConfirmed)
+            PlcTestDetails.Text += "\n" + T("Negotiated S7 PDU: {0} bytes.", result.PduLength!);
+        else
+        {
+            var reason = result.Failure switch
+            {
+                PlcDiagnosticFailure.Timeout => T("The connection test timed out."),
+                PlcDiagnosticFailure.PeerClosed => T("The peer closed the connection before setup completed."),
+                PlcDiagnosticFailure.InvalidResponse => T("The peer returned an invalid or unsupported setup response."),
+                PlcDiagnosticFailure.Rejected => T("The peer rejected S7 session setup."),
+                _ => T("Network connection failed. Check the cable, PC subnet and PLC address.")
+            };
+            PlcTestDetails.Text += "\n" + reason;
+        }
+        PlcCheckedAtText.Text = T("Last connection attempt: {0} UTC · elapsed {1} ms", result.CheckedAt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+            result.Elapsed.TotalMilliseconds.ToString("F0", CultureInfo.InvariantCulture));
+    }
+
     private void OnClosed(object? sender, EventArgs e)
     {
+        _windowClosed = true;
+        _plcSession?.Dispose();
+        _plcSession = null;
         _timer.Stop();
         _connected = false;
         _lifetime.Cancel();

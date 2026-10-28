@@ -1,6 +1,17 @@
 using CFLDetectools.Core;
 using CFLDetectools.Simulator;
 
+// Explicit manual hardware diagnostic. Normal verification never contacts a PLC.
+if (args.Length > 0)
+{
+    if (args.Length != 2 || args[0] != "--probe-plc" || !PlcConnectionDiagnostic.TryParseAddress(args[1], out var endpoint))
+        throw new ArgumentException("Usage: --probe-plc <PLC_IPv4>");
+    var probe = await PlcConnectionDiagnostic.TestAsync(endpoint);
+    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(probe));
+    Environment.ExitCode = probe.SessionConfirmed ? 0 : 1;
+    return;
+}
+
 using var client = new SimulatedPumpClient();
 var checks = 0;
 void Check(bool condition, string description)
@@ -58,4 +69,5 @@ try
 }
 catch (ObjectDisposedException) { Check(true, "Disposed client cannot reconnect"); }
 await AnalysisChecks.RunAsync(Check);
+await PlcDiagnosticChecks.RunAsync(Check);
 Console.WriteLine($"{checks} checks passed.");
