@@ -28,6 +28,65 @@ internal static class PlcDiagnosticChecks
         check(success.CheckedAt.Offset == TimeSpan.Zero && success.Elapsed >= TimeSpan.Zero,
             "Diagnostic results include a UTC timestamp and elapsed duration");
 
+        foreach (var mode in new byte[] { 0, 1 })
+        {
+            await WithServerAsync(async (stream, token) =>
+            {
+                await ReadRequestAsync(stream, 22, token); await stream.WriteAsync(TransportConfirm, token);
+                await ReadRequestAsync(stream, 25, token); await stream.WriteAsync(SessionConfirm, token);
+                await ExpectRequestAsync(stream, "0300001F02F080320100000002000E00000401120A10020001000003000F18", token);
+                var status = Convert.FromHexString("0300001A02F0803203000000020002000500000401FF04000800");
+                status[25] = mode; await FragmentAsync(stream, status, token);
+                if (mode == 0)
+                {
+                    await ExpectRequestAsync(stream, "0300002502F080320100000C000014000028000000000000FD000009505F50524F4752414D", token);
+                    await stream.WriteAsync(Convert.FromHexString("0300001402F080320300000C0000010000000028"), token);
+                    await ExpectRequestAsync(stream, "0300001F02F080320100000003000E00000401120A10020001000003000F18", token);
+                    status[12] = 3; status[25] = 1; await stream.WriteAsync(status, token);
+                }
+                check(await stream.ReadAsync(new byte[1], token) == 0, "CPU RUN sends no duplicate command");
+            }, async port =>
+            {
+                var connection = await PlcConnectionDiagnostic.ConnectAsync(IPAddress.Loopback, port: port);
+                using var session = connection.Session ?? throw new InvalidOperationException("Session missing");
+                var result = await session.RequestCpuRunAsync();
+                check(result == (mode == 0 ? PlcRunResult.AcknowledgedRunIndicated : PlcRunResult.AlreadyRunning),
+                    mode == 0 ? "CPU RUN reads mode, sends once, and reads mode again" : "CPU RUN does not send when mode indicates RUN");
+            });
+        }
+
+        await WithServerAsync(async (stream, token) =>
+        {
+            await ReadRequestAsync(stream, 22, token); await stream.WriteAsync(TransportConfirm, token);
+            await ReadRequestAsync(stream, 25, token); await stream.WriteAsync(SessionConfirm, token);
+            await ReadRequestAsync(stream, 31, token);
+            await stream.WriteAsync(Convert.FromHexString("0300001A02F0803203000000020002000500000401FF04000802"), token);
+            check(await stream.ReadAsync(new byte[1], token) == 0, "Unknown CPU mode closes without a RUN command");
+        }, async port =>
+        {
+            var connection = await PlcConnectionDiagnostic.ConnectAsync(IPAddress.Loopback, port: port);
+            using var session = connection.Session ?? throw new InvalidOperationException("Session missing");
+            try { await session.RequestCpuRunAsync(); check(false, "Unknown CPU mode must fail"); }
+            catch (InvalidDataException) { check(true, "Unknown CPU mode is rejected"); }
+        });
+
+        await WithServerAsync(async (stream, token) =>
+        {
+            await ReadRequestAsync(stream, 22, token); await stream.WriteAsync(TransportConfirm, token);
+            await ReadRequestAsync(stream, 25, token); await stream.WriteAsync(SessionConfirm, token);
+            await ReadRequestAsync(stream, 31, token);
+            await stream.WriteAsync(Convert.FromHexString("0300001A02F0803203000000020002000500000401FF04000800"), token);
+            await ReadRequestAsync(stream, 37, token);
+            await stream.WriteAsync(Convert.FromHexString("0300001402F080320300000C0000010000810028"), token);
+            check(await stream.ReadAsync(new byte[1], token) == 0, "Rejected RUN acknowledgement is not retried");
+        }, async port =>
+        {
+            var connection = await PlcConnectionDiagnostic.ConnectAsync(IPAddress.Loopback, port: port);
+            using var session = connection.Session ?? throw new InvalidOperationException("Session missing");
+            try { await session.RequestCpuRunAsync(); check(false, "Rejected RUN must fail"); }
+            catch (InvalidDataException) { check(true, "Rejected RUN acknowledgement closes the session"); }
+        });
+
         await WithServerAsync(async (stream, token) =>
         {
             await ExpectRequestAsync(stream, "0300001611E00000000100C1020100C2020300C0010A", token);

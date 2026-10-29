@@ -54,8 +54,9 @@ signal quality, application-level S7 responsiveness or command handling. TCP kee
 and a pending socket read detect transport closure, potentially after a delay. They do
 not guarantee the PLC program is operating or that its data is accessible.
 
-The diagnostic has no variable-read, variable-write, program-transfer, CPU-control
-or clock-setting operations. It is deliberately separate from `IPumpClient` and
+The diagnostic has an operator-confirmed CPU RUN action for the bench SR30,
+and no pump variable reads or writes, program transfer or clock-setting operations.
+It is deliberately separate from `IPumpClient` and
 does not consume the reference project's signal map. All displayed pump data and
 demo commands remain simulated regardless of this diagnostic's result. A live
 signal driver still requires the prerequisites above.
@@ -78,8 +79,7 @@ describes those requirements and methods. A C# [HslCommunication source copy](ht
 describes its hot-start operation as applicable to S7-200 SMART. This is a
 third-party implementation, not evidence that a particular CPU, firmware,
 access level or response handling has been verified. Its licensing and binary
-provenance also require review before use. The diagnostic session above cannot
-send that command and must not claim to read the CPU mode.
+provenance also require review before use.
 
 On a bench SR30 (6ES7 288-1SR30-0AA1, firmware V2.8), a separate C# probe
 sent one hot-start request after Micro/WIN reported STOP and system OK. The CPU
@@ -96,6 +96,14 @@ verify the resulting mode after a single operator-requested transition. A lost
 response makes the outcome unknown, not a reason to retry automatically. Keep
 CPU mode control distinct from simulated pump commands and do not stop a running
 CPU merely to test a start transition.
+
+The RUN button is experimental and intended only for the identified bench SR30.
+Its mode indication is derived from an undocumented read observed in the Siemens
+software: values 0 and 1 matched STOP and RUN on the bench. This is not a
+Siemens-documented mode interface and may be wrong on other CPUs or firmware.
+Confirm the exact CPU and mode independently before use, and independently verify
+the result. The application fails closed for other values or invalid replies,
+closes the session on communication errors, and never retries RUN automatically.
 
 ## Siemens references
 

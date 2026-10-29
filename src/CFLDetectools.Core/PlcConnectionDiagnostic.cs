@@ -18,25 +18,75 @@ public sealed record PlcDiagnosticResult(PlcDiagnosticStage Stage, PlcDiagnostic
 
 public sealed record PlcDiagnosticConnection(PlcDiagnosticResult Result, PlcDiagnosticSession? Session);
 
-/// <summary>A diagnostic-only session. It has no operations for reading or writing PLC variables.</summary>
+public enum PlcRunResult { AlreadyRunning, AcknowledgedRunIndicated, AcknowledgedModeUnknown }
+
+/// <summary>A PLC session with a bench-specific CPU RUN operation, separate from pump control.</summary>
 public sealed class PlcDiagnosticSession : IDisposable
 {
     private readonly TcpClient _client;
-    internal PlcDiagnosticSession(TcpClient client) => _client = client;
+    private readonly Socket _socket;
+    private readonly SemaphoreSlim _operation = new(1, 1);
+    internal PlcDiagnosticSession(TcpClient client) { _client = client; _socket = client.Client; }
 
-    // A zero-length read means orderly remote close. Unexpected application data is
-    // also treated as a lost session because this diagnostic never requests it.
-    // TCP keepalive detects a broken transport, but does not verify S7 data access.
+    // Poll without reading so command replies have exactly one consumer.
     public async Task WaitForDisconnectAsync(CancellationToken cancellationToken = default)
-        => _ = await _client.GetStream().ReadAsync(new byte[1], cancellationToken).ConfigureAwait(false);
+    {
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_socket.Poll(0, SelectMode.SelectRead) && _socket.Available == 0) return;
+            await Task.Delay(250, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    // The mode indication was observed on a specific SR30 bench, not documented by Siemens.
+    // Fail closed on any unrecognized frame or value. Never retry a mode change.
+    public async Task<PlcRunResult> RequestCpuRunAsync(CancellationToken cancellationToken = default)
+    {
+        await _operation.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(5));
+            var token = timeout.Token;
+            var mode = await ReadModeAsync(2, token).ConfigureAwait(false);
+            if (mode == 1) return PlcRunResult.AlreadyRunning;
+            var request = Convert.FromHexString("0300002502F080320100000C000014000028000000000000FD000009505F50524F4752414D");
+            var stream = _client.GetStream();
+            if (_socket.Available != 0) throw new InvalidDataException("Unexpected pending PLC data.");
+            await stream.WriteAsync(request, token).ConfigureAwait(false);
+            var ack = await PlcConnectionDiagnostic.ReadPacketAsync(stream, token).ConfigureAwait(false);
+            if (!ack.SequenceEqual(Convert.FromHexString("0300001402F080320300000C0000010000000028")))
+                throw new InvalidDataException("Unrecognized CPU RUN acknowledgement; outcome unknown.");
+            var after = await ReadModeAsync(3, token).ConfigureAwait(false);
+            return after == 1 ? PlcRunResult.AcknowledgedRunIndicated : PlcRunResult.AcknowledgedModeUnknown;
+        }
+        catch { _client.Dispose(); throw; }
+        finally { _operation.Release(); }
+    }
+
+    private async Task<byte> ReadModeAsync(byte reference, CancellationToken token)
+    {
+        var request = Convert.FromHexString("0300001F02F080320100000002000E00000401120A10020001000003000F18");
+        request[12] = reference;
+        var stream = _client.GetStream();
+        if (_socket.Available != 0) throw new InvalidDataException("Unexpected pending PLC data.");
+        await stream.WriteAsync(request, token).ConfigureAwait(false);
+        var reply = await PlcConnectionDiagnostic.ReadPacketAsync(stream, token).ConfigureAwait(false);
+        var expected = Convert.FromHexString("0300001A02F0803203000000020002000500000401FF04000800");
+        expected[12] = reference;
+        if (reply.Length != expected.Length || !reply.AsSpan(0, 25).SequenceEqual(expected.AsSpan(0, 25)) || reply[25] > 1)
+            throw new InvalidDataException("Unrecognized CPU mode indication.");
+        return reply[25];
+    }
 
     public void Dispose() => _client.Dispose();
 }
 
 /// <summary>
 /// S7-200 SMART connection diagnostic, not an IPumpClient driver.
-/// Only COTP connection and S7 Setup Communication are sent. No variable access,
-/// equipment commands, program transfer, clock writes or CPU mode changes exist here.
+/// Connection setup itself sends only COTP and S7 Setup Communication. The returned
+/// session separately exposes an operator-requested, bench-specific CPU RUN operation.
 /// TestAsync closes its session; ConnectAsync transfers the live session to its caller.
 /// </summary>
 public static class PlcConnectionDiagnostic
@@ -139,7 +189,7 @@ public static class PlcConnectionDiagnostic
         PlcDiagnosticConnection Result(PlcDiagnosticFailure failure) => new(new(stage, failure, DateTimeOffset.UtcNow, watch.Elapsed), null);
     }
 
-    private static async Task<byte[]> ReadPacketAsync(NetworkStream stream, CancellationToken token)
+    internal static async Task<byte[]> ReadPacketAsync(NetworkStream stream, CancellationToken token)
     {
         var header = new byte[4];
         await stream.ReadExactlyAsync(header, token).ConfigureAwait(false);

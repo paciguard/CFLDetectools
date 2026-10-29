@@ -191,5 +191,15 @@
   "PLC session lost or closed by the peer.": "PLC 会话连接中断，或已由对端关闭。",
   "PLC session not connected.": "PLC 会话未连接。",
   "Negotiated S7 PDU: {0} bytes.": "协商的 S7 PDU 长度：{0} 字节。",
-  "Last connection attempt: {0} UTC · elapsed {1} ms": "最近连接：{0} UTC · 耗时 {1} ms"
+  "Last connection attempt: {0} UTC · elapsed {1} ms": "最近连接：{0} UTC · 耗时 {1} ms",
+  "CPU RUN control (bench SR30 only)": "CPU 运行控制（仅限已测试的 SR30）",
+  "CPU mode indication is experimental. Confirm CPU model and operating mode independently before use.": "CPU 模式指示处于试验阶段。使用前请独立确认 CPU 型号和运行模式。",
+  "Run PLC CPU": "运行 PLC CPU",
+  "CPU RUN is a separate physical PLC action. Pump data and pump controls remain simulated; no program is downloaded.": "CPU 运行是单独的物理 PLC 操作。泵数据和泵控制仍为模拟；不会下载程序。",
+  "Confirm the connected PLC is the tested S7-200 SMART SR30 and check its CPU mode independently. RUN executes the existing PLC program and may change physical outputs. Continue?": "请确认连接的 PLC 是已测试的 S7-200 SMART SR30，并独立检查 CPU 模式。运行将执行现有 PLC 程序，可能改变物理输出。是否继续？",
+  "Sending CPU RUN request...": "正在发送 CPU 运行请求……",
+  "Bench mode indication says RUN; no command sent. Verify CPU mode independently.": "试验模式指示为运行；未发送命令。请独立确认 CPU 模式。",
+  "CPU accepted RUN; bench mode indication says RUN. Verify CPU mode independently.": "CPU 已接受运行请求；试验模式指示为运行。请独立确认 CPU 模式。",
+  "CPU acknowledged RUN but mode is unverified. Check CPU mode independently.": "CPU 已确认运行请求，但模式尚未验证。请独立检查 CPU 模式。",
+  "CPU RUN outcome unknown. Session closed; check CPU mode before trying again.": "CPU 运行结果未知。会话已关闭；重试前请检查 CPU 模式。"
 }

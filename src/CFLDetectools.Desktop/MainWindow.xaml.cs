@@ -45,6 +45,8 @@ public partial class MainWindow : Window
     private enum PlcTestState { Untested, Invalid, Testing, Connected, Failed, Cancelled, Disconnected, Lost }
     private PlcTestState _plcTestState;
     private bool _plcTestBusy;
+    private bool _plcRunBusy;
+    private string _plcRunStatusKey = "";
     private bool _windowClosed;
 
     private sealed record PumpRow(PumpSnapshot Snapshot)
@@ -385,6 +387,7 @@ public partial class MainWindow : Window
     {
         if (!_ready) return;
         _plcTestResult = null;
+        _plcRunStatusKey = "";
         _plcTestState = PlcTestState.Untested;
         RenderPlcDiagnostic();
     }
@@ -393,6 +396,7 @@ public partial class MainWindow : Window
     {
         if (_plcTestBusy) return;
         _plcTestResult = null;
+        _plcRunStatusKey = "";
         if (!PlcConnectionDiagnostic.TryParseAddress(PlcIpInput.Text, out var address))
         {
             _plcTestState = PlcTestState.Invalid;
@@ -433,12 +437,40 @@ public partial class MainWindow : Window
 
     private void OnCancelPlcTest(object sender, RoutedEventArgs e)
     {
+        if (_plcRunBusy) return;
         if (_plcTestBusy) { _plcTestCancellation?.Cancel(); return; }
         var session = _plcSession;
         _plcSession = null;
         session?.Dispose();
         _plcTestState = PlcTestState.Disconnected;
         RenderPlcDiagnostic();
+    }
+
+    private async void OnRunPlcCpu(object sender, RoutedEventArgs e)
+    {
+        var session = _plcSession;
+        if (session is null || _plcRunBusy) return;
+        if (MessageBox.Show(T("Confirm the connected PLC is the tested S7-200 SMART SR30 and check its CPU mode independently. RUN executes the existing PLC program and may change physical outputs. Continue?"),
+            T("Run PLC CPU"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        _plcRunBusy = true;
+        _plcRunStatusKey = "Sending CPU RUN request...";
+        RenderPlcDiagnostic();
+        try
+        {
+            var result = await session.RequestCpuRunAsync(_lifetime.Token);
+            _plcRunStatusKey = result switch
+            {
+                PlcRunResult.AlreadyRunning => "Bench mode indication says RUN; no command sent. Verify CPU mode independently.",
+                PlcRunResult.AcknowledgedRunIndicated => "CPU accepted RUN; bench mode indication says RUN. Verify CPU mode independently.",
+                _ => "CPU acknowledged RUN but mode is unverified. Check CPU mode independently."
+            };
+        }
+        catch (Exception error) when (error is OperationCanceledException or IOException or InvalidDataException or System.Net.Sockets.SocketException or ObjectDisposedException)
+        {
+            _plcRunStatusKey = "CPU RUN outcome unknown. Session closed; check CPU mode before trying again.";
+            if (ReferenceEquals(_plcSession, session)) { _plcSession = null; session.Dispose(); _plcTestState = PlcTestState.Lost; }
+        }
+        finally { _plcRunBusy = false; if (!_windowClosed) RenderPlcDiagnostic(); }
     }
 
     private async Task WatchPlcSessionAsync(PlcDiagnosticSession session)
@@ -456,7 +488,9 @@ public partial class MainWindow : Window
     {
         PlcIpInput.IsEnabled = !_plcTestBusy && _plcSession is null;
         PlcTestButton.IsEnabled = !_plcTestBusy && _plcSession is null;
-        PlcCancelButton.IsEnabled = _plcTestBusy || _plcSession is not null;
+        PlcCancelButton.IsEnabled = !_plcRunBusy && (_plcTestBusy || _plcSession is not null);
+        PlcRunButton.IsEnabled = !_plcRunBusy && !_plcTestBusy && _plcSession is not null;
+        PlcRunStatus.Text = _plcRunStatusKey.Length == 0 ? "" : T(_plcRunStatusKey);
         PlcCancelButton.Content = _plcTestBusy ? T("Cancel") : T("Disconnect");
         PlcConnectionText.Text = _plcSession is not null ? T("PLC session: connected") : T("PLC session: disconnected");
         PlcTestStatus.Text = _plcTestState switch
