@@ -81,6 +81,15 @@ access level or response handling has been verified. Its licensing and binary
 provenance also require review before use. The diagnostic session above cannot
 send that command and must not claim to read the CPU mode.
 
+On a bench SR30 (6ES7 288-1SR30-0AA1, firmware V2.8), a separate C# probe
+sent one hot-start request after Micro/WIN reported STOP and system OK. The CPU
+returned an S7 acknowledgement with function 0x28 and an empty success error
+header; a subsequent Micro/WIN refresh reported RUN and system OK. This confirms
+one transition on that bench, not a general response contract or a validated
+mode-read API. In particular, the linked source's response parser expects a
+byte beyond the 20-byte acknowledgement observed on the bench. Do not copy its
+success parser without correction and validation.
+
 Before implementing CPU RUN, establish an independently verified current mode,
 identify a supported and correctly acknowledged command for the exact CPU, and
 verify the resulting mode after a single operator-requested transition. A lost
