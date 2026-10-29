@@ -64,6 +64,30 @@ Automated checks use loopback protocol fixtures, including fragmented replies,
 invalid packets, S7 rejection, premature EOF, timeout and cancellation. Hardware
 checks must be requested explicitly and reported separately from these checks.
 
+## CPU RUN research
+
+The Siemens Web API documented for firmware V2.7 and later can return CPU
+RUN/STOP, system and force status in a read response, including an empty read.
+It requires the PLC Web server, TLS configuration and an authorized Web user.
+The documented API methods do not include an operation to change CPU mode;
+the Web server's own RUN button should not be confused with a documented API
+command. Do not bypass certificate validation or commit credentials.
+
+The [Siemens Web API development manual](https://cache.industry.siemens.com/dl/files/447/109813447/att_1115298/v1/S7-200_Smart_Web_API_development_manual_US.pdf)
+describes those requirements and methods. A C# [HslCommunication source copy](https://github.com/Hadisi234/HslCommunication_SourceCode_9.2.6/blob/8b97dff0a13c18f75cc64fc33a8d5cdeedc7f21f/HslCommunication.Profinet.Siemens/SiemensS7Net.cs)
+describes its hot-start operation as applicable to S7-200 SMART. This is a
+third-party implementation, not evidence that a particular CPU, firmware,
+access level or response handling has been verified. Its licensing and binary
+provenance also require review before use. The diagnostic session above cannot
+send that command and must not claim to read the CPU mode.
+
+Before implementing CPU RUN, establish an independently verified current mode,
+identify a supported and correctly acknowledged command for the exact CPU, and
+verify the resulting mode after a single operator-requested transition. A lost
+response makes the outcome unknown, not a reason to retry automatically. Keep
+CPU mode control distinct from simulated pump commands and do not stop a running
+CPU merely to test a start transition.
+
 ## Siemens references
 
 - [S7-200 SMART system manual](https://cache.industry.siemens.com/dl/files/610/109745610/att_1010424/v1/s7-200_SMART_system_manual_en-US.pdf):
