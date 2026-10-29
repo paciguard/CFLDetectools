@@ -201,5 +201,14 @@
   "Bench mode indication says RUN; no command sent. Verify CPU mode independently.": "试验模式指示为运行；未发送命令。请独立确认 CPU 模式。",
   "CPU accepted RUN; bench mode indication says RUN. Verify CPU mode independently.": "CPU 已接受运行请求；试验模式指示为运行。请独立确认 CPU 模式。",
   "CPU acknowledged RUN but mode is unverified. Check CPU mode independently.": "CPU 已确认运行请求，但模式尚未验证。请独立检查 CPU 模式。",
-  "CPU RUN outcome unknown. Session closed; check CPU mode before trying again.": "CPU 运行结果未知。会话已关闭；重试前请检查 CPU 模式。"
+  "CPU RUN outcome unknown. Session closed; check CPU mode before trying again.": "CPU 运行结果未知。会话已关闭；重试前请检查 CPU 模式。",
+  "CPU RUN / STOP control (bench SR30 only)": "CPU 运行 / 停止控制（仅限已测试的 SR30）",
+  "Stop PLC CPU": "停止 PLC CPU",
+  "CPU RUN and STOP are physical PLC actions. Pump data and pump controls remain simulated; no program is downloaded.": "CPU 运行和停止是物理 PLC 操作。泵数据和泵控制仍为模拟；不会下载程序。",
+  "Confirm the connected PLC is the tested S7-200 SMART SR30 and check its CPU mode independently. STOP halts the PLC program and may change physical outputs. Continue?": "请确认连接的 PLC 是已测试的 S7-200 SMART SR30，并独立检查 CPU 模式。停止将中止 PLC 程序，可能改变物理输出。是否继续？",
+  "Sending CPU STOP request...": "正在发送 CPU 停止请求……",
+  "Bench mode indication says STOP; no command sent. Verify CPU mode independently.": "试验模式指示为停止；未发送命令。请独立确认 CPU 模式。",
+  "CPU accepted STOP; bench mode indication says STOP. Verify CPU mode independently.": "CPU 已接受停止请求；试验模式指示为停止。请独立确认 CPU 模式。",
+  "CPU acknowledged STOP but mode is unverified. Check CPU mode independently.": "CPU 已确认停止请求，但模式尚未验证。请独立检查 CPU 模式。",
+  "CPU STOP outcome unknown. Session closed; check CPU mode before trying again.": "CPU 停止结果未知。会话已关闭；重试前请检查 CPU 模式。"
 }

@@ -55,6 +55,50 @@ internal static class PlcDiagnosticChecks
             });
         }
 
+        foreach (var mode in new byte[] { 0, 1 })
+        {
+            await WithServerAsync(async (stream, token) =>
+            {
+                await ReadRequestAsync(stream, 22, token); await stream.WriteAsync(TransportConfirm, token);
+                await ReadRequestAsync(stream, 25, token); await stream.WriteAsync(SessionConfirm, token);
+                await ExpectRequestAsync(stream, "0300001F02F080320100000002000E00000401120A10020001000003000F18", token);
+                var status = Convert.FromHexString("0300001A02F0803203000000020002000500000401FF04000800");
+                status[25] = mode; await FragmentAsync(stream, status, token);
+                if (mode == 1)
+                {
+                    await ExpectRequestAsync(stream, "0300002102F080320100000E000010000029000000000009505F50524F4752414D", token);
+                    await stream.WriteAsync(Convert.FromHexString("0300001402F080320300000E0000010000000029"), token);
+                    await ExpectRequestAsync(stream, "0300001F02F080320100000003000E00000401120A10020001000003000F18", token);
+                    status[12] = 3; status[25] = 0; await stream.WriteAsync(status, token);
+                }
+                check(await stream.ReadAsync(new byte[1], token) == 0, "CPU STOP sends no duplicate command");
+            }, async port =>
+            {
+                var connection = await PlcConnectionDiagnostic.ConnectAsync(IPAddress.Loopback, port: port);
+                using var session = connection.Session ?? throw new InvalidOperationException("Session missing");
+                var result = await session.RequestCpuStopAsync();
+                check(result == (mode == 1 ? PlcStopResult.AcknowledgedStopIndicated : PlcStopResult.AlreadyStopped),
+                    mode == 1 ? "CPU STOP reads mode, sends once, and reads mode again" : "CPU STOP does not send when mode indicates STOP");
+            });
+        }
+
+        await WithServerAsync(async (stream, token) =>
+        {
+            await ReadRequestAsync(stream, 22, token); await stream.WriteAsync(TransportConfirm, token);
+            await ReadRequestAsync(stream, 25, token); await stream.WriteAsync(SessionConfirm, token);
+            await ReadRequestAsync(stream, 31, token);
+            await stream.WriteAsync(Convert.FromHexString("0300001A02F0803203000000020002000500000401FF04000801"), token);
+            await ReadRequestAsync(stream, 33, token);
+            await stream.WriteAsync(Convert.FromHexString("0300001402F080320300000E0000010000810029"), token);
+            check(await stream.ReadAsync(new byte[1], token) == 0, "Rejected STOP acknowledgement is not retried");
+        }, async port =>
+        {
+            var connection = await PlcConnectionDiagnostic.ConnectAsync(IPAddress.Loopback, port: port);
+            using var session = connection.Session ?? throw new InvalidOperationException("Session missing");
+            try { await session.RequestCpuStopAsync(); check(false, "Rejected STOP must fail"); }
+            catch (InvalidDataException) { check(true, "Rejected STOP acknowledgement closes the session"); }
+        });
+
         await WithServerAsync(async (stream, token) =>
         {
             await ReadRequestAsync(stream, 22, token); await stream.WriteAsync(TransportConfirm, token);

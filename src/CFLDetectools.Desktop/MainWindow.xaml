@@ -96,9 +96,10 @@
                                     <TextBlock x:Name="PlcTestStatus" FontWeight="SemiBold" TextWrapping="Wrap" />
                                     <TextBlock x:Name="PlcTestDetails" Margin="0,10,0,0" TextWrapping="Wrap" />
                                     <TextBlock x:Name="PlcCheckedAtText" Margin="0,10,0,0" TextWrapping="Wrap" Foreground="SlateGray" />
-                                    <TextBlock Text="{local:Loc Key='CPU RUN control (bench SR30 only)'}" FontWeight="SemiBold" Margin="0,18,0,0" />
+                                    <TextBlock Text="{local:Loc Key='CPU RUN / STOP control (bench SR30 only)'}" FontWeight="SemiBold" Margin="0,18,0,0" />
                                     <TextBlock Text="{local:Loc Key='CPU mode indication is experimental. Confirm CPU model and operating mode independently before use.'}" TextWrapping="Wrap" Margin="0,6,0,0" />
-                                    <Button x:Name="PlcRunButton" Content="{local:Loc Key='Run PLC CPU'}" HorizontalAlignment="Left" Click="OnRunPlcCpu" IsEnabled="False" />
+                                    <WrapPanel><Button x:Name="PlcRunButton" Content="{local:Loc Key='Run PLC CPU'}" Click="OnRunPlcCpu" IsEnabled="False" />
+                                    <Button x:Name="PlcStopButton" Content="{local:Loc Key='Stop PLC CPU'}" Click="OnStopPlcCpu" IsEnabled="False" /></WrapPanel>
                                     <TextBlock x:Name="PlcRunStatus" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Border>
@@ -106,7 +107,7 @@
                                 <StackPanel>
                                     <TextBlock Text="{local:Loc Key='About this connection'}" FontWeight="SemiBold" Margin="0,0,0,10" />
                                     <TextBlock Text="{local:Loc Key='The application keeps one S7 diagnostic session open until you disconnect or close the application. TCP keepalive monitors the transport; detecting a broken cable may take time.'}" TextWrapping="Wrap" />
-                                    <TextBlock Text="{local:Loc Key='CPU RUN is a separate physical PLC action. Pump data and pump controls remain simulated; no program is downloaded.'}" Margin="0,12,0,0" TextWrapping="Wrap" />
+                                    <TextBlock Text="{local:Loc Key='CPU RUN and STOP are physical PLC actions. Pump data and pump controls remain simulated; no program is downloaded.'}" Margin="0,12,0,0" TextWrapping="Wrap" />
                                     <TextBlock Text="{local:Loc Key='Use Start demo to explore simulated pumps, measurements, vibration and test curves. Simulation continues independently of the PLC connection.'}" Margin="0,12,0,0" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Border>

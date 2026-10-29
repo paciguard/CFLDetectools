@@ -473,6 +473,33 @@ public partial class MainWindow : Window
         finally { _plcRunBusy = false; if (!_windowClosed) RenderPlcDiagnostic(); }
     }
 
+    private async void OnStopPlcCpu(object sender, RoutedEventArgs e)
+    {
+        var session = _plcSession;
+        if (session is null || _plcRunBusy) return;
+        if (MessageBox.Show(T("Confirm the connected PLC is the tested S7-200 SMART SR30 and check its CPU mode independently. STOP halts the PLC program and may change physical outputs. Continue?"),
+            T("Stop PLC CPU"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        _plcRunBusy = true;
+        _plcRunStatusKey = "Sending CPU STOP request...";
+        RenderPlcDiagnostic();
+        try
+        {
+            var result = await session.RequestCpuStopAsync(_lifetime.Token);
+            _plcRunStatusKey = result switch
+            {
+                PlcStopResult.AlreadyStopped => "Bench mode indication says STOP; no command sent. Verify CPU mode independently.",
+                PlcStopResult.AcknowledgedStopIndicated => "CPU accepted STOP; bench mode indication says STOP. Verify CPU mode independently.",
+                _ => "CPU acknowledged STOP but mode is unverified. Check CPU mode independently."
+            };
+        }
+        catch (Exception error) when (error is OperationCanceledException or IOException or InvalidDataException or System.Net.Sockets.SocketException or ObjectDisposedException)
+        {
+            _plcRunStatusKey = "CPU STOP outcome unknown. Session closed; check CPU mode before trying again.";
+            if (ReferenceEquals(_plcSession, session)) { _plcSession = null; session.Dispose(); _plcTestState = PlcTestState.Lost; }
+        }
+        finally { _plcRunBusy = false; if (!_windowClosed) RenderPlcDiagnostic(); }
+    }
+
     private async Task WatchPlcSessionAsync(PlcDiagnosticSession session)
     {
         try { await session.WaitForDisconnectAsync(_lifetime.Token); }
@@ -490,6 +517,7 @@ public partial class MainWindow : Window
         PlcTestButton.IsEnabled = !_plcTestBusy && _plcSession is null;
         PlcCancelButton.IsEnabled = !_plcRunBusy && (_plcTestBusy || _plcSession is not null);
         PlcRunButton.IsEnabled = !_plcRunBusy && !_plcTestBusy && _plcSession is not null;
+        PlcStopButton.IsEnabled = !_plcRunBusy && !_plcTestBusy && _plcSession is not null;
         PlcRunStatus.Text = _plcRunStatusKey.Length == 0 ? "" : T(_plcRunStatusKey);
         PlcCancelButton.Content = _plcTestBusy ? T("Cancel") : T("Disconnect");
         PlcConnectionText.Text = _plcSession is not null ? T("PLC session: connected") : T("PLC session: disconnected");

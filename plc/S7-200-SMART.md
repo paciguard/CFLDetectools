@@ -54,7 +54,7 @@ signal quality, application-level S7 responsiveness or command handling. TCP kee
 and a pending socket read detect transport closure, potentially after a delay. They do
 not guarantee the PLC program is operating or that its data is accessible.
 
-The diagnostic has an operator-confirmed CPU RUN action for the bench SR30,
+The diagnostic has operator-confirmed CPU RUN and STOP actions for the bench SR30,
 and no pump variable reads or writes, program transfer or clock-setting operations.
 It is deliberately separate from `IPumpClient` and
 does not consume the reference project's signal map. All displayed pump data and
@@ -104,6 +104,11 @@ Siemens-documented mode interface and may be wrong on other CPUs or firmware.
 Confirm the exact CPU and mode independently before use, and independently verify
 the result. The application fails closed for other values or invalid replies,
 closes the session on communication errors, and never retries RUN automatically.
+
+The STOP button follows the same experimental mode check and confirmation flow.
+A separate C# bench probe sent one STOP request from RUN; Micro/WIN subsequently
+reported STOP, system OK and not forced. The application does not retry STOP on
+an uncertain response. Independently verify the mode after either action.
 
 ## Siemens references
 

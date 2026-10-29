@@ -19,8 +19,9 @@ public sealed record PlcDiagnosticResult(PlcDiagnosticStage Stage, PlcDiagnostic
 public sealed record PlcDiagnosticConnection(PlcDiagnosticResult Result, PlcDiagnosticSession? Session);
 
 public enum PlcRunResult { AlreadyRunning, AcknowledgedRunIndicated, AcknowledgedModeUnknown }
+public enum PlcStopResult { AlreadyStopped, AcknowledgedStopIndicated, AcknowledgedModeUnknown }
 
-/// <summary>A PLC session with a bench-specific CPU RUN operation, separate from pump control.</summary>
+/// <summary>A PLC session with bench-specific CPU mode operations, separate from pump control.</summary>
 public sealed class PlcDiagnosticSession : IDisposable
 {
     private readonly TcpClient _client;
@@ -65,6 +66,29 @@ public sealed class PlcDiagnosticSession : IDisposable
         finally { _operation.Release(); }
     }
 
+    public async Task<PlcStopResult> RequestCpuStopAsync(CancellationToken cancellationToken = default)
+    {
+        await _operation.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(5));
+            var token = timeout.Token;
+            var mode = await ReadModeAsync(2, token).ConfigureAwait(false);
+            if (mode == 0) return PlcStopResult.AlreadyStopped;
+            var stream = _client.GetStream();
+            if (_socket.Available != 0) throw new InvalidDataException("Unexpected pending PLC data.");
+            await stream.WriteAsync(Convert.FromHexString("0300002102F080320100000E000010000029000000000009505F50524F4752414D"), token).ConfigureAwait(false);
+            var ack = await PlcConnectionDiagnostic.ReadPacketAsync(stream, token).ConfigureAwait(false);
+            if (!ack.SequenceEqual(Convert.FromHexString("0300001402F080320300000E0000010000000029")))
+                throw new InvalidDataException("Unrecognized CPU STOP acknowledgement; outcome unknown.");
+            var after = await ReadModeAsync(3, token).ConfigureAwait(false);
+            return after == 0 ? PlcStopResult.AcknowledgedStopIndicated : PlcStopResult.AcknowledgedModeUnknown;
+        }
+        catch { _client.Dispose(); throw; }
+        finally { _operation.Release(); }
+    }
+
     private async Task<byte> ReadModeAsync(byte reference, CancellationToken token)
     {
         var request = Convert.FromHexString("0300001F02F080320100000002000E00000401120A10020001000003000F18");
@@ -86,7 +110,7 @@ public sealed class PlcDiagnosticSession : IDisposable
 /// <summary>
 /// S7-200 SMART connection diagnostic, not an IPumpClient driver.
 /// Connection setup itself sends only COTP and S7 Setup Communication. The returned
-/// session separately exposes an operator-requested, bench-specific CPU RUN operation.
+/// session separately exposes operator-requested, bench-specific CPU mode operations.
 /// TestAsync closes its session; ConnectAsync transfers the live session to its caller.
 /// </summary>
 public static class PlcConnectionDiagnostic
